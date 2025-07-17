@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion de Projet </title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+        .section {
+            background-color: white;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .matrix {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .matrix-cell {
+            border: 1px solid #ddd;
+            padding: 10px;
+            min-height: 100px;
+        }
+        .matrix-header {
+            text-align: center;
+            font-weight: bold;
+            background-color: #f2f2f2;
+        }
+        .tab-container {
+            margin-top: 20px;
+        }
+        .tab-buttons {
+            display: flex;
+            margin-bottom: -1px;
+        }
+        .tab-button {
+            padding: 10px 20px;
+            background-color: #f2f2f2;
+            border: 1px solid #ddd;
+            border-bottom: none;
+            cursor: pointer;
+            border-radius: 5px 5px 0 0;
+            margin-right: 5px;
+        }
+        .tab-button.active {
+            background-color: white;
+            border-bottom: 1px solid white;
+        }
+        .tab-content {
+            display: none;
+            padding: 20px;
+            border: 1px solid #ddd;
+            background-color: white;
+        }
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Gestion de Projet</h1>
+        <p>APPLICATION DE GESTION DE PROJET</p>
+    </header>
+
+    <div class="section">
+        <h2>Création du Projet</h2>
+        <div class="form-group">
+            <label for="project-name">Nom du projet</label>
+            <input type="text" id="project-name" required>
+        </div>
+        <div class="form-group">
+            <label for="project-description">Description du projet</label>
+            <textarea id="project-description" rows="3" required></textarea>
+        </div>
+        <div class="form-group">
+            <label for="start-date">Date de début</label>
+            <input type="date" id="start-date" required>
+        </div>
+        <div class="form-group">
+            <label for="end-date">Date de fin prévue</label>
+            <input type="date" id="end-date" required>
+        </div>
+        <div class="form-group">
+            <label>Objectifs du projet</label>
+            <div id="objectives-container">
+                <div class="form-group objective-item">
+                    <input type="text" class="objective-input" placeholder="Objectif">
+                    <button type="button" class="remove-objective">Supprimer</button>
+                </div>
+            </div>
+            <button type="button" id="add-objective">Ajouter un objectif</button>
+        </div>
+        <div class="form-group">
+            <label for="project-budget">Budget estimé (€)</label>
+            <input type="number" id="project-budget" min="0" step="100">
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Gestion des Acteurs</h2>
+        <div class="tab-container">
+            <div class="tab-buttons">
+                <div class="tab-button active" data-tab="internal-actors">Acteurs Internes</div>
+                <div class="tab-button" data-tab="external-actors">Acteurs Externes</div>
+            </div>
+            <div class="tab-content active" id="internal-actors">
+                <h3>Équipe Projet</h3>
+                <table id="team-table">
+                    <thead>
+                        <tr>
+                            <th>Nom</th>
+                            <th>Rôle</th>
+                            <th>Compétences</th>
+                            <th>Responsabilités</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><input type="text" class="team-name"></td>
+                            <td><input type="text" class="team-role"></td>
+                            <td><input type="text" class="team-skills"></td>
+                            <td><input type="text" class="team-responsibilities"></td>
+                            <td><button type="button" class="remove-member">Supprimer</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button type="button" id="add-team-member">Ajouter un membre</button>
+
+                <h3>Responsables Fonctionnels</h3>
+                <table id="functional-table">
+                    <thead>
+                        <tr>
+                            <th>Nom</th>
+                            <th>Domaine</th>
+                            <th>Responsabilités</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><input type="text" class="functional-name"></td>
+                            <td><input type="text" class="functional-domain"></td>
+                            <td><input type="text" class="functional-responsibilities"></td>
+                            <td><button type="button" class="remove-functional">Supprimer</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button type="button" id="add-functional">Ajouter un responsable</button>
+
+                <h3>Direction</h3>
+                <div class="form-group">
+                    <label for="director-name">Nom</label>
+                    <input type="text" id="director-name">
+                </div>
+                <div class="form-group">
+                    <label for="director-contact">Contact</label>
+                    <input type="text" id="director-contact">
+                </div>
+            </div>
+            <div class="tab-content" id="external-actors">
+                <h3>Clients</h3>
+                <table id="clients-table">
+                    <thead>
+                        <tr>
+                            <th>Nom</th>
+                            <th>Contact</th>
+                            <th>Attentes</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><input type="text" class="client-name"></td>
+                            <td><input type="text" class="client-contact"></td>
+                            <td><input type="text" class="client-expectations"></td>
+                            <td><button type="button" class="remove-client">Supprimer</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button type="button" id="add-client">Ajouter un client</button>
+
+                <h3>Fournisseurs</h3>
+                <table id="suppliers-table">
+                    <thead>
+                        <tr>
+                            <th>Nom</th>
+                            <th>Service/Produit</th>
+                            <th>Contact</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><input type="text" class="supplier-name"></td>
+                            <td><input type="text" class="supplier-service"></td>
+                            <td><input type="text" class="supplier-contact"></td>
+                            <td><button type="button" class="remove-supplier">Supprimer</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button type="button" id="add-supplier">Ajouter un fournisseur</button>
+
+                <h3>Partenaires</h3>
+                <table id="partners-table">
+                    <thead>
+                        <tr>
+                            <th>Nom</th>
+                            <th>Rôle</th>
+                            <th>Contact</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><input type="text" class="partner-name"></td>
+                            <td><input type="text" class="partner-role"></td>
+                            <td><input type="text" class="partner-contact"></td>
+                            <td><button type="button" class="remove-partner">Supprimer</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button type="button" id="add-partner">Ajouter un partenaire</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Analyse des Parties Prenantes</h2>
+        <h3>Matrice Pouvoir-Intérêt</h3>
+        <div class="matrix">
+            <div class="matrix-header">Intérêt Faible</div>
+            <div class="matrix-header">Intérêt Moyen</div>
+            <div class="matrix-header">Intérêt Fort</div>
+            
+            <div class="matrix-cell">
+                <h4>Pouvoir Faible</h4>
+                <p>Effort minimal</p>
+                <select class="stakeholder-select">
+                    <option value="">Sélectionner une partie prenante</option>
+                </select>
+            </div>
+            <div class="matrix-cell">
+                <h4>Pouvoir Faible</h4>
+                <p>Tenir informés</p>
+                <select class="stakeholder-select">
+                    <option value="">Sélectionner une partie prenante</option>
+                </select>
+            </div>
+            <div class="matrix-cell">
+                <h4>Pouvoir Faible</h4>
+                <p>Satisfaire</p>
+                <select class="stakeholder-select">
+                    <option value="">Sélectionner une partie prenante</option>
+                </select>
+            </div>
+            
+            <div class="matrix-cell">
+                <h4>Pouvoir Moyen</h4>
+                <p>Effort minimal</p>
+                <select class="stakeholder-select">
+                    <option value="">Sélectionner une partie prenante</option>
+                </select>
+            </div>
+            <div class="matrix-cell">
+                <h4>Pouvoir Moyen</h4>
+                <p>Tenir informés</p>
+                <select class="stakeholder-select">
+                    <option value="">Sélectionner une partie prenante</option>
+                </select>
+            </div>
+            <div class="matrix-cell">
+                <h4>Pouvoir Moyen</h4>
+                <p>Satisfaire</p>
+                <select class="stakeholder-select">
+                    <option value="">Sélectionner une partie prenante</option>
+                </select>
+            </div>
+            
+            <div class="matrix-cell">
+                <h4>Pouvoir Fort</h4>
+                <p>Effort minimal</p>
+                <select class="stakeholder-select">
+                    <option value="">Sélectionner une partie prenante</option>
+                </select>
+            </div>
+            <div class="matrix-cell">
+                <h4>Pouvoir Fort</h4>
+                <p>Tenir informés</p>
+                <select class="stakeholder-select">
+                    <option value="">Sélectionner une partie prenante</option>
+                </select>
+            </div>
+            <div class="matrix-cell">
+                <h4>Pouvoir Fort</h4>
+                <p>Gérer avec attention</p>
+                <select class="stakeholder-select">
+                    <option value="">Sélectionner une partie prenante</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Comité de Pilotage</h2>
+        <div class="form-group">
+            <label for="steering-frequency">Fréquence des réunions</label>
+            <select id="steering-frequency">
+                <option value="hebdomadaire">Hebdomadaire</option>
+                <option value="bimensuelle">Bimensuelle</option>
+                <option value="mensuelle">Mensuelle</option>
+                <option value="trimestrielle">Trimestrielle</option>
+            </select>
+        </div>
+        
+        <h3>Membres du Comité</h3>
+        <table id="steering-table">
+            <thead>
+                <tr>
+                    <th>Nom</th>
+                    <th>Rôle dans le comité</th>
+                    <th>Représentant</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><input type="text" class="steering-name"></td>
+                    <td><input type="text" class="steering-role"></td>
+                    <td><input type="text" class="steering-representing"></td>
+                    <td><button type="button" class="remove-steering">Supprimer</button></td>
+                </tr>
+            </tbody>
+        </table>
+        <button type="button" id="add-steering">Ajouter un membre</button>
+        
+        <h3>Décisions Clés</h3>
+        <div id="decisions-container">
+            <div class="form-group decision-item">
+                <label>Date</label>
+                <input type="date" class="decision-date">
+                <label>Décision</label>
+                <input type="text" class="decision-text">
+                <label>Impact</label>
+                <input type="text" class="decision-impact">
+                <button type="button" class="remove-decision">Supprimer</button>
+            </div>
+        </div>
+        <button type="button" id="add-decision">Ajouter une décision</button>
+    </div>
+
+    <div class="section">
+        <h2>Organisation de l'Équipe</h2>
+        <div class="form-group">
+            <label for="team-structure">Structure de l'équipe (description)</label>
+            <textarea id="team-structure" rows="3"></textarea>
+        </div>
+        
+        <h3>Répartition des Rôles</h3>
+        <table id="roles-table">
+            <thead>
+                <tr>
+                    <th>Membre</th>
+                    <th>Tâches</th>
+                    <th>Livrables</th>
+                    <th>Échéance</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><select class="role-member">
+                        <option value="">Sélectionner un membre</option>
+                    </select></td>
+                    <td><input type="text" class="role-tasks"></td>
+                    <td><input type="text" class="role-deliverables"></td>
+                    <td><input type="date" class="role-deadline"></td>
+                    <td><button type="button" class="remove-role">Supprimer</button></td>
+                </tr>
+            </tbody>
+        </table>
+        <button type="button" id="add-role">Ajouter un rôle</button>
+        
+        <h3>Facteurs de Motivation</h3>
+        <div class="form-group">
+            <label><input type="checkbox" class="motivation-factor" value="communication"> Communication claire et ouverte</label>
+        </div>
+        <div class="form-group">
+            <label><input type="checkbox" class="motivation-factor" value="recognition"> Reconnaissance des efforts</label>
+        </div>
+        <div class="form-group">
+            <label><input type="checkbox" class="motivation-factor" value="trust"> Confiance mutuelle</label>
+        </div>
+        <div class="form-group">
+            <label><input type="checkbox" class="motivation-factor" value="environment"> Environnement de travail positif</label>
+        </div>
+        <div class="form-group">
+            <label><input type="checkbox" class="motivation-factor" value="training"> Opportunités de formation</label>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Plan de Communication</h2>
+        <table id="communication-table">
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Canal</th>
+                    <th>Fréquence</th>
+                    <th>Responsable</th>
+                    <th>Destinataires</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><select class="comm-type">
+                        <option value="verticale">Verticale</option>
+                        <option value="horizontale">Horizontale</option>
+                    </select></td>
+                    <td><select class="comm-channel">
+                        <option value="email">Email</option>
+                        <option value="reunion">Réunion</option>
+                        <option value="rapport">Rapport</option>
+                        <option value="appel">Appel téléphonique</option>
+                        <option value="sms">SMS</option>
+                        <option value="discussion">Discussion informelle</option>
+                    </select></td>
+                    <td><input type="text" class="comm-frequency" placeholder="Ex: Quotidien, Hebdomadaire"></td>
+                    <td><select class="comm-responsible">
+                        <option value="">Sélectionner un responsable</option>
+                    </select></td>
+                    <td><input type="text" class="comm-recipients" placeholder="Destinataires"></td>
+                    <td><button type="button" class="remove-comm">Supprimer</button></td>
+                </tr>
+            </tbody>
+        </table>
+        <button type="button" id="add-comm">Ajouter un élément</button>
+        
+        <h3>Outils Utilisés</h3>
+        <div class="form-group">
+            <label><input type="checkbox" class="tool" value="outils-digitaux"> Outils digitaux collaboratifs</label>
+        </div>
+        <div class="form-group">
+            <label><input type="checkbox" class="tool" value="reunions"> Réunions régulières</label>
+        </div>
+        <div class="form-group">
+            <label><input type="checkbox" class="tool" value="rapports"> Rapports synthétiques</label>
+        </div>
+        <div class="form-group">
+            <label><input type="checkbox" class="tool" value="supports"> Supports visuels</label>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Gestion des Risques</h2>
+        <table id="risks-table">
+            <thead>
+                <tr>
+                    <th>Risque</th>
+                    <th>Probabilité</th>
+                    <th>Impact</th>
+                    <th>Mesure préventive</th>
+                    <th>Plan d'action correctif</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><input type="text" class="risk-name"></td>
+                    <td><select class="risk-probability">
+                        <option value="faible">Faible</option>
+                        <option value="moyenne">Moyenne</option>
+                        <option value="forte">Forte</option>
+                    </select></td>
+                    <td><select class="risk-impact">
+                        <option value="faible">Faible</option>
+                        <option value="moyen">Moyen</option>
+                        <option value="fort">Fort</option>
+                    </select></td>
+                    <td><input type="text" class="risk-prevention"></td>
+                    <td><input type="text" class="risk-action"></td>
+                    <td><button type="button" class="remove-risk">Supprimer</button></td>
+                </tr>
+            </tbody>
+        </table>
+        <button type="button" id="add-risk">Ajouter un risque</button>
+    </div>
+
+    <div class="section">
+        <button type="button" id="generate-pdf" style="padding: 15px 30px; font-size: 18px;">Générer le PDF du Projet</button>
+        <button type="button" id="save-project" style="padding: 15px 30px; font-size: 18px; margin-left: 20px;">Enregistrer le Projet</button>
+        <button type="button" id="load-project" style="padding: 15px 30px; font-size: 18px; margin-left: 20px;">Charger un Projet</button>
+    </div>
+
+    <script>
+        // Initialisation de jsPDF
+        const { jsPDF } = window.jspdf;
+        
+        // Gestion des onglets
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.addEventListener('click', () => {
+                const tabId = button.getAttribute('data-tab');
+                
+                // Désactiver tous les onglets
+                document.querySelectorAll('.tab-button').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                
+                // Activer l'onglet sélectionné
+                button.classList.add('active');
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+        
+        // Gestion des objectifs
+        document.getElementById('add-objective').addEventListener('click', () => {
+            const container = document.getElementById('objectives-container');
+            const newObjective = document.createElement('div');
+            newObjective.className = 'form-group objective-item';
+            newObjective.innerHTML = `
+                <input type="text" class="objective-input" placeholder="Objectif">
+                <button type="button" class="remove-objective">Supprimer</button>
+            `;
+            container.appendChild(newObjective);
+            
+            newObjective.querySelector('.remove-objective').addEventListener('click', () => {
+                container.removeChild(newObjective);
+            });
+        });
+        
+        // Gestion des membres de l'équipe
+        document.getElementById('add-team-member').addEventListener('click', () => {
+            const table = document.getElementById('team-table').getElementsByTagName('tbody')[0];
+            const newRow = table.insertRow();
+            newRow.innerHTML = `
+                <td><input type="text" class="team-name"></td>
+                <td><input type="text" class="team-role"></td>
+                <td><input type="text" class="team-skills"></td>
+                <td><input type="text" class="team-responsibilities"></td>
+                <td><button type="button" class="remove-member">Supprimer</button></td>
+            `;
+            
+            newRow.querySelector('.remove-member').addEventListener('click', () => {
+                table.removeChild(newRow);
+            });
+        });
+        
+        // Gestion des responsables fonctionnels
+        document.getElementById('add-functional').addEventListener('click', () => {
+            const table = document.getElementById('functional-table').getElementsByTagName('tbody')[0];
+            const newRow = table.insertRow();
+            newRow.innerHTML = `
+                <td><input type="text" class="functional-name"></td>
+                <td><input type="text" class="functional-domain"></td>
+                <td><input type="text" class="functional-responsibilities"></td>
+                <td><button type="button" class="remove-functional">Supprimer</button></td>
+            `;
+            
+            newRow.querySelector('.remove-functional').addEventListener('click', () => {
+                table.removeChild(newRow);
+            });
+        });
+        
+        // Gestion des clients
+        document.getElementById('add-client').addEventListener('click', () => {
+            const table = document.getElementById('clients-table').getElementsByTagName('tbody')[0];
+            const newRow = table.insertRow();
+            newRow.innerHTML = `
+                <td><input type="text" class="client-name"></td>
+                <td><input type="text" class="client-contact"></td>
+                <td><input type="text" class="client-expectations"></td>
+                <td><button type="button" class="remove-client">Supprimer</button></td>
+            `;
+            
+            newRow.querySelector('.remove-client').addEventListener('click', () => {
+                table.removeChild(newRow);
+            });
+        });
+        
+        // Gestion des fournisseurs
+        document.getElementById('add-supplier').addEventListener('click', () => {
+            const table = document.getElementById('suppliers-table').getElementsByTagName('tbody')[0];
+            const newRow = table.insertRow();
+            newRow.innerHTML = `
+                <td><input type="text" class="supplier-name"></td>
+                <td><input type="text" class="supplier-service"></td>
+                <td><input type="text" class="supplier-contact"></td>
+                <td><button type="button" class="remove-supplier">Supprimer</button></td>
+            `;
+            
+            newRow.querySelector('.remove-supplier').addEventListener('click', () => {
+                table.removeChild(newRow);
+            });
+        });
+        
+        // Gestion des partenaires
+        document.getElementById('add-partner').addEventListener('click', () => {
+            const table = document.getElementById('partners-table').getElementsByTagName('tbody')[0];
+            const newRow = table.insertRow();
+            newRow.innerHTML = `
+                <td><input type="text" class="partner-name"></td>
+                <td><input type="text" class="partner-role"></td>
+                <td><input type="text" class="partner-contact"></td>
+                <td><button type="button" class="remove-partner">Supprimer</button></td>
+            `;
+            
+            newRow.querySelector('.remove-partner').addEventListener('click', () => {
+                table.removeChild(newRow);
+            });
+        });
+        
+        // Gestion des membres du comité de pilotage
+        document.getElementById('add-steering').addEventListener('click', () => {
+            const table = document.getElementById('steering-table').getElementsByTagName('tbody')[0];
+            const newRow = table.insertRow();
+            newRow.innerHTML = `
+                <td><input type="text" class="steering-name"></td>
+                <td><input type="text" class="steering-role"></td>
+                <td><input type="text" class="steering-representing"></td>
+                <td><button type="button" class="remove-steering">Supprimer</button></td>
+            `;
+            
+            newRow.querySelector('.remove-steering').addEventListener('click', () => {
+                table.removeChild(newRow);
+            });
+        });
+        
+        // Gestion des décisions
+        document.getElementById('add-decision').addEventListener('click', () => {
+            const container = document.getElementById('decisions-container');
+            const newDecision = document.createElement('div');
+            newDecision.className = 'form-group decision-item';
+            newDecision.innerHTML = `
+                <label>Date</label>
+                <input type="date" class="decision-date">
+                <label>Décision</label>
+                <input type="text" class="decision-text">
+                <label>Impact</label>
+                <input type="text" class="decision-impact">
+                <button type="button" class="remove-decision">Supprimer</button>
+            `;
+            container.appendChild(newDecision);
+            
+            newDecision.querySelector('.remove-decision').addEventListener('click', () => {
+                container.removeChild(newDecision);
+            });
+        });
+        
+        // Gestion des rôles
+        document.getElementById('add-role').addEventListener('click', () => {
+            const table = document.getElementById('roles-table').getElementsByTagName('tbody')[0];
+            const newRow = table.insertRow();
+            newRow.innerHTML = `
+                <td><select class="role-member">
+                    <option value="">Sélectionner un membre</option>
+                </select></td>
+                <td><input type="text" class="role-tasks"></td>
+                <td><input type="text" class="role-deliverables"></td>
+                <td><input type="date" class="role-deadline"></td>
+                <td><button type="button" class="remove-role">Supprimer</button></td>
+            `;
+            
+            newRow.querySelector('.remove-role').addEventListener('click', () => {
+                table.removeChild(newRow);
+            });
+        });
+        
+        // Gestion des éléments de communication
+        document.getElementById('add-comm').addEventListener('click', () => {
+            const table = document.getElementById('communication-table').getElementsByTagName('tbody')[0];
+            const newRow = table.insertRow();
+            newRow.innerHTML = `
+                <td><select class="comm-type">
+                    <option value="verticale">Verticale</option>
+                    <option value="horizontale">Horizontale</option>
+                </select></td>
+                <td><select class="comm-channel">
+                    <option value="email">Email</option>
+                    <option value="reunion">Réunion</option>
+                    <option value="rapport">Rapport</option>
+                    <option value="appel">Appel téléphonique</option>
+                    <option value="sms">SMS</option>
+                    <option value="discussion">Discussion informelle</option>
+                </select></td>
+                <td><input type="text" class="comm-frequency" placeholder="Ex: Quotidien, Hebdomadaire"></td>
+                <td><select class="comm-responsible">
+                    <option value="">Sélectionner un responsable</option>
+                </select></td>
+                <td><input type="text" class="comm-recipients" placeholder="Destinataires"></td>
+                <td><button type="button" class="remove-comm">Supprimer</button></td>
+            `;
+            
+            newRow.querySelector('.remove-comm').addEventListener('click', () => {
+                table.removeChild(newRow);
+            });
+        });
+        
+        // Gestion des risques
+        document.getElementById('add-risk').addEventListener('click', () => {
+            const table = document.getElementById('risks-table').getElementsByTagName('tbody')[0];
+            const newRow = table.insertRow();
+            newRow.innerHTML = `
+                <td><input type="text" class="risk-name"></td>
+                <td><select class="risk-probability">
+                    <option value="faible">Faible</option>
+                    <option value="moyenne">Moyenne</option>
+                    <option value="forte">Forte</option>
+                </select></td>
+                <td><select class="risk-impact">
+                    <option value="faible">Faible</option>
+                    <option value="moyen">Moyen</option>
+                    <option value="fort">Fort</option>
+                </select></td>
+                <td><input type="text" class="risk-prevention"></td>
+                <td><input type="text" class="risk-action"></td>
+                <td><button type="button" class="remove-risk">Supprimer</button></td>
+            `;
+            
+            newRow.querySelector('.remove-risk').addEventListener('click', () => {
+                table.removeChild(newRow);
+            });
+        });
+        
+        // Génération du PDF
+        document.getElementById('generate-pdf').addEventListener('click', () => {
+            const doc = new jsPDF();
+            
+            // En-tête
+            doc.setFontSize(20);
+            doc.setTextColor(40, 40, 40);
+            doc.text('Gestion de Projet', 105, 20, { align: 'center' });
+            doc.setFontSize(14);
+            doc.text(document.getElementById('project-name').value, 105, 30, { align: 'center' });
+            
+            // Informations de base
+            doc.setFontSize(12);
+            doc.text(`Date de début: ${document.getElementById('start-date').value}`, 20, 50);
+            doc.text(`Date de fin prévue: ${document.getElementById('end-date').value}`, 20, 60);
+            doc.text(`Budget estimé: ${document.getElementById('project-budget').value} €`, 20, 70);
+            
+            // Objectifs
+            doc.text('Objectifs du projet:', 20, 90);
+            const objectives = document.querySelectorAll('.objective-input');
+            let yPos = 100;
+            objectives.forEach((obj, index) => {
+                doc.text(`${index + 1}. ${obj.value}`, 25, yPos);
+                yPos += 10;
+            });
+            
+            // Ajouter d'autres sections au PDF...
+            
+            // Sauvegarde du PDF
+            doc.save(`Projet_${document.getElementById('project-name').value.replace(/\s+/g, '_')}.pdf`);
+        });
+        
+        // Sauvegarde du projet
+        document.getElementById('save-project').addEventListener('click', () => {
+            const projectData = {
+                basics: {
+                    name: document.getElementById('project-name').value,
+                    description: document.getElementById('project-description').value,
+                    startDate: document.getElementById('start-date').value,
+                    endDate: document.getElementById('end-date').value,
+                    budget: document.getElementById('project-budget').value,
+                    objectives: Array.from(document.querySelectorAll('.objective-input')).map(obj => obj.value)
+                },
+                // Ajouter d'autres données...
+            };
+            
+            const dataStr = JSON.stringify(projectData);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportName = `Projet_${document.getElementById('project-name').value.replace(/\s+/g, '_')}.json`;
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportName);
+            linkElement.click();
+        });
+        
+        // Chargement du projet
+        document.getElementById('load-project').addEventListener('click', () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            
+            input.onchange = e => {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                
+                reader.onload = event => {
+                    const projectData = JSON.parse(event.target.result);
+                    
+                    // Charger les données de base
+                    document.getElementById('project-name').value = projectData.basics.name || '';
+                    document.getElementById('project-description').value = projectData.basics.description || '';
+                    document.getElementById('start-date').value = projectData.basics.startDate || '';
+                    document.getElementById('end-date').value = projectData.basics.endDate || '';
+                    document.getElementById('project-budget').value = projectData.basics.budget || '';
+                    
+                    // Charger les objectifs
+                    const objectivesContainer = document.getElementById('objectives-container');
+                    objectivesContainer.innerHTML = '';
+                    
+                    if (projectData.basics.objectives && projectData.basics.objectives.length > 0) {
+                        projectData.basics.objectives.forEach(obj => {
+                            const newObjective = document.createElement('div');
+                            newObjective.className = 'form-group objective-item';
+                            newObjective.innerHTML = `
+                                <input type="text" class="objective-input" value="${obj}" placeholder="Objectif">
+                                <button type="button" class="remove-objective">Supprimer</button>
+                            `;
+                            objectivesContainer.appendChild(newObjective);
+                            
+                            newObjective.querySelector('.remove-objective').addEventListener('click', () => {
+                                objectivesContainer.removeChild(newObjective);
+                            });
+                        });
+                    } else {
+                        const defaultObjective = document.createElement('div');
+                        defaultObjective.className = 'form-group objective-item';
+                        defaultObjective.innerHTML = `
+                            <input type="text" class="objective-input" placeholder="Objectif">
+                            <button type="button" class="remove-objective">Supprimer</button>
+                        `;
+                        objectivesContainer.appendChild(defaultObjective);
+                        
+                        defaultObjective.querySelector('.remove-objective').addEventListener('click', () => {
+                            objectivesContainer.removeChild(defaultObjective);
+                        });
+                    }
+                    
+                    // Charger d'autres sections...
+                };
+                
+                reader.readAsText(file);
+            };
+            
+            input.click();
+        });
+    </script>
+</body>
+</html>
